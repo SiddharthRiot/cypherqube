@@ -1,6 +1,6 @@
 import subprocess
 import re
-
+from risk_engine import analyze_quantum_risk, print_risk_report
 
 def run_openssl(target, port):
     try:
@@ -108,7 +108,6 @@ def analyze_target(target, port):
         "hash_function": hash_algo,
         "key_exchange": key_exchange,
         "tls_signature": signature_algo,
-
         "certificate": {
             "public_key_algorithm": pub_algo,
             "key_size": key_size,
@@ -118,9 +117,17 @@ def analyze_target(target, port):
         }
     }
 
+    # Print inventory
     print_crypto_inventory(crypto_inventory)
 
+    # Run quantum risk analysis
+    risks, score = analyze_quantum_risk(crypto_inventory)
+
+    # Print risk report
+    print_risk_report(risks, score)
+
     return crypto_inventory
+
 
 
 def get_certificate(target, port):
