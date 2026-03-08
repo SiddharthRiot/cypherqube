@@ -22,7 +22,7 @@ A proof-of-concept security tool that scans TLS services, builds a cryptographic
 ```
 cypherQube/
 ├── app.py            # Streamlit web dashboard
-├── main.py           # CLI entry point
+├── cli.py           # CLI entry point
 ├── scanner.py        # OpenSSL TLS scanner & certificate parser
 ├── risk_engine.py    # Quantum risk scoring engine
 ├── pdf_report.py     # PDF report generator (reportlab)
@@ -34,7 +34,7 @@ cypherQube/
 ## Installation
 
 ```bash
-git clone https://github.com/yourusername/cypherqube.git
+git clone https://github.com/Sumit0x00/cypherqube.git
 cd cypherqube
 
 python -m venv .venv
