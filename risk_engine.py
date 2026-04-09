@@ -1,5 +1,3 @@
-# ─── Quantum-Vulnerable Algorithms (Shor's Algorithm) ────────────────────────
-
 QUANTUM_VULNERABLE = [
     "RSA", "ECDSA", "ECDH", "ECDHE",
     "id-ecPublicKey",
@@ -9,8 +7,6 @@ QUANTUM_VULNERABLE = [
     "DH", "DHE", "DSA",
 ]
 
-# ─── NIST PQC Key Encapsulation (FIPS 203) ────────────────────────────────────
-
 PQC_KEM = [
     "ML-KEM", "MLKEM", "Kyber",
     "kyber512", "kyber768", "kyber1024",
@@ -18,8 +14,6 @@ PQC_KEM = [
     "X25519Kyber768", "X25519MLKEM768",
     "p256_kyber512", "SecP256r1Kyber768",
 ]
-
-# ─── NIST PQC Signature Algorithms (FIPS 204 / 205 / 206) ────────────────────
 
 PQC_SIG = [
     "ML-DSA", "MLDSA", "Dilithium",
@@ -32,8 +26,6 @@ PQC_SIG = [
     "falcon", "falcon512", "falcon1024",
     "FN-DSA-512", "FN-DSA-1024",
 ]
-
-# ─── Hash Functions ───────────────────────────────────────────────────────────
 
 PARTIAL_RISK = [
     "SHA1", "SHA-1",
@@ -49,8 +41,6 @@ HASH_SAFE = [
     "SHAKE128", "SHAKE256",
 ]
 
-# ─── Cipher Suites ────────────────────────────────────────────────────────────
-
 CIPHER_SAFE = [
     "AES_256", "AES256", "AES-256",
     "TLS_AES_256",
@@ -62,8 +52,6 @@ CIPHER_WEAK = [
     "TLS_AES_128",
     "3DES", "DES", "RC4",
 ]
-
-# ─── Remediation Messages ─────────────────────────────────────────────────────
 
 REMEDIATION = {
     "key_exchange_vuln": (
@@ -110,8 +98,6 @@ REMEDIATION = {
 }
 
 
-# ─── Component Check Helper ───────────────────────────────────────────────────
-
 def _check_component(value, category, vuln_list, safe_list,
                      vuln_rem, safe_rem, severity, vuln_score=3):
     """
@@ -153,8 +139,6 @@ def _check_component(value, category, vuln_list, safe_list,
     }, 1
 
 
-# ─── Main Risk Analysis ───────────────────────────────────────────────────────
-
 def analyze_quantum_risk(inventory):
     """
     Analyse a crypto inventory dict and return (findings, score).
@@ -181,7 +165,6 @@ def analyze_quantum_risk(inventory):
     hash_algo    = inventory.get("hash_function",  "")
     cert_algo    = inventory.get("certificate", {}).get("public_key_algorithm", "")
 
-    # ── 1. Key Exchange ── +3 (most urgent — HNDL exposed) ───────────────────
     f, s = _check_component(
         key_exchange, "Key Exchange",
         QUANTUM_VULNERABLE, PQC_KEM,
@@ -192,7 +175,6 @@ def analyze_quantum_risk(inventory):
     )
     if f: findings.append(f); score += s
 
-    # ── 2. TLS Signature ── +2 ────────────────────────────────────────────────
     f, s = _check_component(
         tls_sig, "TLS Signature",
         QUANTUM_VULNERABLE, PQC_SIG,
@@ -203,7 +185,6 @@ def analyze_quantum_risk(inventory):
     )
     if f: findings.append(f); score += s
 
-    # ── 3. Certificate Public Key ── +2 ───────────────────────────────────────
     f, s = _check_component(
         cert_algo, "Certificate Public Key",
         QUANTUM_VULNERABLE, PQC_SIG,
@@ -214,7 +195,6 @@ def analyze_quantum_risk(inventory):
     )
     if f: findings.append(f); score += s
 
-    # ── 4. Hash Function ── +1 ────────────────────────────────────────────────
     if hash_algo and hash_algo not in ("Unknown", "—"):
         if any(h.lower() in hash_algo.lower() for h in HASH_SAFE):
             findings.append({
@@ -240,7 +220,6 @@ def analyze_quantum_risk(inventory):
             })
             score += 1
 
-    # ── 5. Cipher Suite ── +1 ─────────────────────────────────────────────────
     if cipher and cipher not in ("Unknown", "—"):
         if any(c.lower() in cipher.lower() for c in CIPHER_SAFE):
             findings.append({
@@ -261,7 +240,6 @@ def analyze_quantum_risk(inventory):
     return findings, min(score, 10)
 
 
-# ─── CLI Print Helper ─────────────────────────────────────────────────────────
 
 SEV_ORDER = {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "UNKNOWN": 3, "INFO": 4, "PASS": 5}
 
@@ -292,8 +270,6 @@ def print_risk_report(findings, score):
                 print(f"  → {rem}")
 
     print(f"\n{'─' * 60}\n")
-
-# ─── Test-Friendly Wrapper ───────────────────────────────────────────────────
 
 def calculate_risk_score(
     tls_version=None,

@@ -3,8 +3,6 @@ import re
 from risk_engine import analyze_quantum_risk, print_risk_report
 
 
-# ─── OpenSSL Raw Output ───────────────────────────────────────────────────────
-
 def run_openssl(target, port):
     try:
         cmd = [
@@ -30,9 +28,6 @@ def run_openssl(target, port):
         print(f"[scanner] OpenSSL error: {e}")
         return None
 
-
-# ─── TLS Field Extractors ─────────────────────────────────────────────────────
-
 def extract_tls_version(output):
     match = re.search(r"Protocol\s*:\s*(TLSv[\d.]+)", output)
     return match.group(1) if match else "Unknown"
@@ -57,8 +52,6 @@ def extract_hash(output):
     match = re.search(r"Hash used:\s*([A-Za-z0-9\-_]+)", output)
     return match.group(1) if match else "Unknown"
 
-
-# ─── Certificate Fetching & Parsing ──────────────────────────────────────────
 
 def get_certificate(target, port):
     try:
@@ -113,8 +106,6 @@ def parse_certificate(cert_output):
         return None
 
 
-# ─── Certificate Field Extractors ────────────────────────────────────────────
-
 def extract_cert_public_key(cert_text):
     if not cert_text:
         return "Unknown", "Unknown"
@@ -149,8 +140,6 @@ def extract_cert_expiry(cert_text):
     return match.group(1).strip() if match else "Unknown"
 
 
-# ─── Print Inventory (CLI) ────────────────────────────────────────────────────
-
 def print_crypto_inventory(inventory):
     print("\n==============================")
     print("      CRYPTO INVENTORY")
@@ -173,8 +162,6 @@ def print_crypto_inventory(inventory):
     print(f"Expiry              : {cert['expiry']}")
 
 
-# ─── Main Entry Point ─────────────────────────────────────────────────────────
-
 def analyze_target(target, port):
     """
     Full TLS scan pipeline:
@@ -185,7 +172,6 @@ def analyze_target(target, port):
       5. Return full report dict
     """
 
-    # ── Step 1: TLS handshake info ────────────────────────────────────────────
     raw_output = run_openssl(target, port)
 
     if not raw_output:
@@ -198,7 +184,6 @@ def analyze_target(target, port):
     hash_algo      = extract_hash(raw_output)
     key_exchange   = extract_key_exchange(raw_output)
 
-    # ── Step 2: Certificate details ───────────────────────────────────────────
     cert_raw  = get_certificate(target, port)
     cert_pem  = extract_first_cert(cert_raw)
     cert_text = parse_certificate(cert_pem)
@@ -208,7 +193,6 @@ def analyze_target(target, port):
     issuer             = extract_cert_issuer(cert_text)
     expiry             = extract_cert_expiry(cert_text)
 
-    # ── Step 3: Build crypto inventory ───────────────────────────────────────
     crypto_inventory = {
         "target":        f"{target}:{port}",
         "port":          port,
@@ -226,22 +210,11 @@ def analyze_target(target, port):
         }
     }
 
-    # ── Step 4: Quantum risk scoring ──────────────────────────────────────────
-    # Score is derived entirely from real scan values above.
-    # risk_engine.py checks each algorithm against known vulnerable/safe lists
-    # and assigns weighted scores (max 10):
-    #   Key Exchange vulnerable  → +3
-    #   TLS Signature vulnerable → +2
-    #   Cert Public Key vuln.    → +2
-    #   Hash weak (Grover)       → +1
-    #   Cipher weak (Grover)     → +1
     risks, score = analyze_quantum_risk(crypto_inventory)
 
-    # CLI print
     print_crypto_inventory(crypto_inventory)
     print_risk_report(risks, score)
 
-    # ── Step 5: Return full report ────────────────────────────────────────────
     crypto_inventory["quantum_risk"] = {
         "risk_score": score,
         "findings":   risks,
@@ -249,7 +222,6 @@ def analyze_target(target, port):
 
     return crypto_inventory
 
-# ─── Test-Friendly Wrapper ───────────────────────────────────────────────────
 
 def scan_target(target: str, port: int = 443) -> dict:
     """

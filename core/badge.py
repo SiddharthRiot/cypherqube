@@ -13,15 +13,11 @@ from datetime import datetime
 from typing import Optional
 from core.badge import determine_badge
 
-# ─── Badge Constants ──────────────────────────────────────────────────────────
-
 BADGE_FULLY_QUANTUM_SAFE = "FULLY_QUANTUM_SAFE"
 BADGE_PQC_READY          = "PQC_READY"
 BADGE_PARTIAL_RISK       = "PARTIAL_RISK"
 BADGE_VULNERABLE         = "VULNERABLE"
 
-
-# ─── Badge Metadata ───────────────────────────────────────────────────────────
 
 BADGE_META = {
     BADGE_FULLY_QUANTUM_SAFE: {
@@ -85,8 +81,6 @@ BADGE_META = {
 }
 
 
-# ─── Badge Dataclass ──────────────────────────────────────────────────────────
-
 @dataclass
 class Badge:
     badge_type:   str
@@ -123,8 +117,6 @@ class Badge:
             "issued_at":   self.issued_at,
         }
 
-
-# ─── Core Badge Logic ─────────────────────────────────────────────────────────
 
 def determine_badge(risk_score: int, target: str = "") -> Badge:
     """
@@ -166,8 +158,6 @@ def determine_badge(risk_score: int, target: str = "") -> Badge:
         color_icon   = meta["color_icon"],
     )
 
-
-# ─── SVG Badge Generator ──────────────────────────────────────────────────────
 
 def generate_svg_badge(badge: Badge, width: int = 320) -> str:
     """
@@ -242,8 +232,6 @@ def generate_svg_badge(badge: Badge, width: int = 320) -> str:
     return svg
 
 
-# ─── Compact Inline Badge (Streamlit cards ke liye) ───────────────────────────
-
 def generate_inline_badge_html(badge: Badge) -> str:
     """
     Ek chhoti si inline HTML badge generate karta hai.
@@ -279,8 +267,6 @@ def generate_inline_badge_html(badge: Badge) -> str:
     ">{badge.score}/10</span>
 </div>"""
 
-
-# ─── Full Certificate Card HTML (Streamlit results page ke liye) ──────────────
 
 def generate_certificate_html(badge: Badge) -> str:
     """
@@ -388,8 +374,6 @@ def generate_certificate_html(badge: Badge) -> str:
 </div>"""
 
 
-# ─── PDF Badge Block (ReportLab ke liye) ──────────────────────────────────────
-
 def get_pdf_badge_data(badge: Badge) -> dict:
     """
     pdf_report.py ke liye badge data dict return karta hai.
@@ -411,8 +395,6 @@ def get_pdf_badge_data(badge: Badge) -> dict:
         "color_text":  badge.color_text,
     }
 
-
-# ─── Bulk Badge Summary (Bulk scan ke liye) ───────────────────────────────────
 
 def summarise_bulk_badges(badges: list[Badge]) -> dict:
     """
@@ -460,9 +442,6 @@ def summarise_bulk_badges(badges: list[Badge]) -> dict:
         "overall_risk":overall,
         "overall_label": BADGE_META[overall]["label"],
     }
-
-
-# ─── Quick test ───────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
     for score, target in [(0, "secure.example.com:443"),

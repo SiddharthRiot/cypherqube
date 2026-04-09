@@ -6,8 +6,6 @@ import pytest
 from risk_engine import calculate_risk_score
 
 
-# ─── Basic High Risk Test ────────────────────────────────────────────────────
-
 def test_high_risk_rsa():
     score = calculate_risk_score(
         tls_version="TLS 1.2",
@@ -20,8 +18,6 @@ def test_high_risk_rsa():
     assert isinstance(score, int)
     assert score >= 7   # RSA = high quantum risk
 
-
-# ─── Low Risk PQC Test ───────────────────────────────────────────────────────
 
 def test_low_risk_pqc():
     score = calculate_risk_score(
@@ -36,8 +32,6 @@ def test_low_risk_pqc():
     assert score <= 2   # PQC = low risk
 
 
-# ─── Medium Risk Hybrid Case ─────────────────────────────────────────────────
-
 def test_medium_risk_mixed():
     score = calculate_risk_score(
         tls_version="TLS 1.3",
@@ -48,9 +42,6 @@ def test_medium_risk_mixed():
     )
 
     assert 3 <= score <= 6   # Mixed crypto = medium risk
-
-
-# ─── Weak TLS Version Test ───────────────────────────────────────────────────
 
 def test_weak_tls_version():
     score = calculate_risk_score(
@@ -64,8 +55,6 @@ def test_weak_tls_version():
     assert score >= 8   # Weak TLS + weak key = very high risk
 
 
-# ─── Strong Classical (but not PQC) ──────────────────────────────────────────
-
 def test_strong_but_not_quantum_safe():
     score = calculate_risk_score(
         tls_version="TLS 1.3",
@@ -77,8 +66,6 @@ def test_strong_but_not_quantum_safe():
 
     assert 4 <= score <= 7   # Strong classical ≠ quantum safe
 
-
-# ─── Missing Data Edge Case ──────────────────────────────────────────────────
 
 def test_missing_data():
     score = calculate_risk_score(
@@ -93,8 +80,6 @@ def test_missing_data():
     assert score >= 5   # Unknown = risky assumption
 
 
-# ─── Boundary Test (Score Range) ─────────────────────────────────────────────
-
 def test_score_bounds():
     score = calculate_risk_score(
         tls_version="TLS 1.3",
@@ -106,8 +91,6 @@ def test_score_bounds():
 
     assert 0 <= score <= 10
 
-
-# ─── Deterministic Output Test ───────────────────────────────────────────────
 
 def test_deterministic_behavior():
     params = dict(
@@ -123,8 +106,6 @@ def test_deterministic_behavior():
 
     assert score1 == score2  # Same input → same output
 
-
-# ─── Gradual Risk Increase Test ──────────────────────────────────────────────
 
 def test_risk_increases_with_weaker_keys():
     strong = calculate_risk_score(

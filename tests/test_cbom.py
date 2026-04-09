@@ -6,8 +6,6 @@ import pytest
 from core.cbom import CBOMGenerator
 
 
-# ─── Basic Entry Test ────────────────────────────────────────────────────────
-
 def test_add_entry_basic():
     cbom = CBOMGenerator()
 
@@ -29,9 +27,6 @@ def test_add_entry_basic():
     assert entries[0]["target"] == "example.com"
     assert entries[0]["quantum_safe"] is False
 
-
-# ─── Quantum Safe Detection Test ─────────────────────────────────────────────
-
 def test_quantum_safe_detection():
     cbom = CBOMGenerator()
 
@@ -50,8 +45,6 @@ def test_quantum_safe_detection():
 
     assert entry["quantum_safe"] is True
 
-
-# ─── Mixed Entries Summary Test ──────────────────────────────────────────────
 
 def test_cbom_summary():
     cbom = CBOMGenerator()
@@ -84,8 +77,6 @@ def test_cbom_summary():
     assert summary["risk_ratio"] == "1/2"
 
 
-# ─── Empty CBOM Test ─────────────────────────────────────────────────────────
-
 def test_empty_cbom():
     cbom = CBOMGenerator()
 
@@ -96,8 +87,6 @@ def test_empty_cbom():
     assert summary["not_quantum_safe"] == 0
     assert summary["risk_ratio"] == "0/0"
 
-
-# ─── Clear Function Test ─────────────────────────────────────────────────────
 
 def test_clear_cbom():
     cbom = CBOMGenerator()
@@ -114,8 +103,6 @@ def test_clear_cbom():
 
     assert len(cbom.entries) == 0
 
-
-# ─── Edge Case: Missing Crypto Data ──────────────────────────────────────────
 
 def test_missing_crypto_data():
     cbom = CBOMGenerator()

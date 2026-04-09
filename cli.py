@@ -38,8 +38,8 @@ def main():
 
     target = normalize_target(args.target)
 
-    print("\n🔍 Scanning target:", target)
-    print("⚡ Initializing TLS + Quantum Risk Analysis...\n")
+    print("\n Scanning target:", target)
+    print(" Initializing TLS + Quantum Risk Analysis...\n")
 
     try:
         report = analyze_target(target, args.port)
@@ -48,10 +48,9 @@ def main():
             raise RuntimeError("Scan returned no data")
 
     except Exception as e:
-        print(f"\n❌ Scan failed: {e}")
+        print(f"\n Scan failed: {e}")
         return
-
-    # ─── Show Summary ───────────────────────────────────────────────────────
+    
     risk = report.get("quantum_risk", {})
     score = risk.get("risk_score", "N/A")
     badge = determine_badge(score, target)
@@ -64,20 +63,19 @@ def main():
 
     if isinstance(score, int):
         if score >= 7:
-            print("⚠️  Status: HIGH RISK (Quantum Vulnerable)")
+            print("  Status: HIGH RISK (Quantum Vulnerable)")
         elif score >= 4:
-            print("⚠️  Status: MODERATE RISK")
+            print("  Status: MODERATE RISK")
         else:
-            print("✅ Status: LOW RISK (Quantum Ready)")
+            print(" Status: LOW RISK (Quantum Ready)")
 
-    # ─── Export Options ─────────────────────────────────────────────────────
     if args.json:
         save_json_report(report, args.json)
 
     if args.pdf:
         generate_pdf_report(report, output_path=args.pdf)
 
-    print("\n✅ Scan completed successfully.\n")
+    print("\n Scan completed successfully.\n")
 
 
 if __name__ == "__main__":

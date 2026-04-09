@@ -25,6 +25,7 @@ build/
 *.csv
 reports/
 output/
+report.pdf
 
 # ─── Secrets & Config ─────────────────────────────────────────────────────────
 .env

@@ -5,10 +5,6 @@ from pdf_report import generate_pdf_report
 from scanner import analyze_target
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-
-# ─── Page Config ──────────────────────────────────────────────────────────────
-
 st.set_page_config(
     page_title="CypherQube — TLS Scanner",
     page_icon="🔒",
@@ -971,8 +967,6 @@ hr { border: none !important; border-top: 1px solid #dde2ea !important; margin: 
 """, unsafe_allow_html=True)
 
 
-# ─── Helpers ──────────────────────────────────────────────────────────────────
-
 def normalize_target(t):
     return t.replace("https://", "").replace("http://", "").split("/")[0].strip()
 
@@ -1020,8 +1014,6 @@ def build_finding_html(findings):
     return "".join(html_parts)
 
 
-# ─── Top Header ───────────────────────────────────────────────────────────────
-
 st.markdown("""
 <div class="cq-header-banner">
     <div class="cq-header-left">
@@ -1053,8 +1045,6 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# ─── Secondary Nav Strip ──────────────────────────────────────────────────────
-
 st.markdown("""
 <div class="cq-nav-strip">
     <div class="cq-nav-breadcrumb">
@@ -1073,8 +1063,6 @@ st.markdown("""
     </div>
 </div>
 """, unsafe_allow_html=True)
-
-# ─── Page Hero ────────────────────────────────────────────────────────────────
 
 st.markdown("""
 <div class="cq-page-hero">
@@ -1104,8 +1092,6 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 
-# ─── Scan Input ───────────────────────────────────────────────────────────────
-
 st.markdown("""
 <div class="cq-section">
     <div class="cq-section-num">1</div>
@@ -1134,8 +1120,6 @@ with c2:
 with c3:
     st.markdown("<br>", unsafe_allow_html=True)
     scan_button = st.button("Run Assessment", use_container_width=True)
-
-# ─── Single Scan Results ──────────────────────────────────────────────────────
 
 if scan_button:
     if not raw_target:
@@ -1195,7 +1179,6 @@ if scan_button:
             </div>
             """, unsafe_allow_html=True)
 
-            # ── Alert banner ──
             alert_icons  = {"critical": "⚠️", "medium": "⚡", "safe": "✅"}
             alert_titles = {
                 "critical": "Critical — Post-Quantum Vulnerabilities Detected",
@@ -1254,7 +1237,7 @@ if scan_button:
             st.markdown(findings_html, unsafe_allow_html=True)
             
 
-            # ── Export section ──
+            # Export section 
             st.markdown("""
             <div class="cq-section">
                 <div class="cq-section-num">3</div>
@@ -1282,12 +1265,8 @@ if scan_button:
                     use_container_width=True
                 )
 
-            # FIX 1: Expander properly visible — emoji + styled
-            with st.expander("🔍  Raw Cryptographic Inventory (JSON)"):
+            with st.expander(" Raw Cryptographic Inventory (JSON)"):
                 st.json(report)
-
-
-# ─── Bulk Scanner ─────────────────────────────────────────────────────────────
 
 MAX_BULK = 5
 
@@ -1367,8 +1346,6 @@ if bulk_run:
 
         ok_count  = len(results)
         err_count = len(errors)
-
-        # FIX 2: Batch complete — white card, no nested f-string quotes
         target_word = "targets" if ok_count != 1 else "target"
         failed_html = f"&nbsp;·&nbsp; <span style=\"color:#c81e1e;font-weight:600;\">{err_count} failed</span>" if err_count else ""
         processed_str = f"{len(targets)} of {total_provided} processed"
@@ -1466,8 +1443,6 @@ if bulk_run:
                 )
 
 
-# ─── Footer ───────────────────────────────────────────────────────────────────
-
 st.markdown("""
 <div class="cq-footer">
     <div class="cq-footer-top">
@@ -1513,10 +1488,10 @@ st.markdown("""
             Not a substitute for a formal cryptographic security audit.
         </div>
         <div class="cq-footer-bottom-links">
-            <a class="cq-footer-bottom-link" href="https://github.com/Sumit0x00/cypherqube#readme" target="_blank">Documentation</a>
-            <a class="cq-footer-bottom-link" href="https://github.com/Sumit0x00/cypherqube" target="_blank">GitHub</a>
+            <a class="cq-footer-bottom-link" href="https://github.com/SiddharthRiot/cypherqube#readme" target="_blank">Documentation</a>
+            <a class="cq-footer-bottom-link" href="https://github.com/SiddharthRiot/cypherqube" target="_blank">GitHub</a>
             <a class="cq-footer-bottom-link" href="https://csrc.nist.gov/projects/post-quantum-cryptography" target="_blank">NIST PQC Project</a>
-            <a class="cq-footer-bottom-link" href="https://github.com/Sumit0x00/cypherqube/issues/new?labels=bug&title=[Bug]%3A+" target="_blank">Report an Issue</a>
+            <a class="cq-footer-bottom-link" href="https://github.com/SiddharthRiot/cypherqube/issues/new?labels=bug&title=[Bug]%3A+" target="_blank">Report an Issue</a>
         </div>
     </div>
 </div>

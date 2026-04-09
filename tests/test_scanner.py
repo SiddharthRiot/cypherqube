@@ -6,8 +6,6 @@ import pytest
 from scanner import scan_target
 
 
-# ─── Basic Scan Test ─────────────────────────────────────────────────────────
-
 def test_scan_valid_target():
     result = scan_target("google.com", 443)
 
@@ -28,16 +26,12 @@ def test_scan_valid_target():
         assert key in result
 
 
-# ─── TLS Version Validity ────────────────────────────────────────────────────
-
 def test_tls_version_present():
     result = scan_target("google.com", 443)
 
     assert result["tls_version"] is not None
     assert "TLS" in result["tls_version"]
 
-
-# ─── Cipher Suite Extraction ─────────────────────────────────────────────────
 
 def test_cipher_suite_present():
     result = scan_target("google.com", 443)
@@ -46,14 +40,9 @@ def test_cipher_suite_present():
     assert isinstance(result["cipher_suite"], str)
 
 
-# ─── Invalid Host Handling ───────────────────────────────────────────────────
-
 def test_invalid_host():
     with pytest.raises(Exception):
         scan_target("invalid.nonexistent.domain", 443)
-
-
-# ─── Port Handling Test ──────────────────────────────────────────────────────
 
 def test_custom_port():
     # Some servers may still respond
@@ -64,8 +53,6 @@ def test_custom_port():
         pytest.skip("Network-dependent test skipped")
 
 
-# ─── Missing Data Handling ───────────────────────────────────────────────────
-
 def test_missing_fields_handled():
     result = scan_target("google.com", 443)
 
@@ -74,8 +61,6 @@ def test_missing_fields_handled():
     assert "public_key_size" in result
 
 
-# ─── Output Consistency Test ─────────────────────────────────────────────────
-
 def test_deterministic_output():
     result1 = scan_target("google.com", 443)
     result2 = scan_target("google.com", 443)
@@ -83,16 +68,11 @@ def test_deterministic_output():
     assert result1["tls_version"] == result2["tls_version"]
 
 
-# ─── HTTPS Enforcement Test ──────────────────────────────────────────────────
-
 def test_https_target():
     result = scan_target("google.com", 443)
 
     assert result["port"] == 443
     assert result["tls_version"].startswith("TLS")
-
-
-# ─── Basic Performance Test ──────────────────────────────────────────────────
 
 def test_scan_performance():
     import time
@@ -103,8 +83,6 @@ def test_scan_performance():
 
     assert (end - start) < 10   # should not take too long
 
-
-# ─── Edge Case: Empty Input ──────────────────────────────────────────────────
 
 def test_empty_target():
     with pytest.raises(Exception):

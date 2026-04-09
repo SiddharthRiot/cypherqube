@@ -9,8 +9,6 @@ from dataclasses import dataclass, asdict
 from typing import List, Dict, Optional
 
 
-# ─── CBOM Entry ──────────────────────────────────────────────────────────────
-
 @dataclass
 class CBOMEntry:
     target: str
@@ -24,8 +22,6 @@ class CBOMEntry:
     public_key_size: Optional[int]
     quantum_safe: bool
 
-
-# ─── CBOM Generator ──────────────────────────────────────────────────────────
 
 class CBOMGenerator:
     def __init__(self):
@@ -64,8 +60,6 @@ class CBOMGenerator:
 
         self.entries.append(entry)
 
-    # ─── Quantum Safety Logic ────────────────────────────────────────────────
-
     def _is_quantum_safe(
         self,
         cipher: str,
@@ -88,7 +82,6 @@ class CBOMGenerator:
             if algo in combined:
                 return False
 
-        # Future PQC detection (placeholder)
         pqc_keywords = ["KYBER", "DILITHIUM", "FALCON"]
 
         for pqc in pqc_keywords:
@@ -96,8 +89,6 @@ class CBOMGenerator:
                 return True
 
         return False
-
-    # ─── Export Functions ────────────────────────────────────────────────────
 
     def to_dict(self) -> List[Dict]:
         return [asdict(entry) for entry in self.entries]
@@ -117,8 +108,6 @@ class CBOMGenerator:
     def clear(self):
         self.entries = []
 
-
-# ─── Quick Test ──────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
     cbom = CBOMGenerator()
