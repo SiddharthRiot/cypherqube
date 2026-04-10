@@ -1,24 +1,50 @@
-import subprocess
+import os
 import re
+import shutil
+import subprocess
 from risk_engine import analyze_quantum_risk, print_risk_report
+
+
+DEFAULT_OPENSSL_PATH = r"D:\OpenSSL\OpenSSL-Win64\bin\openssl.exe"
+
+
+def _resolve_openssl_bin():
+    configured = os.environ.get("CYPHERQUBE_OPENSSL")
+    if configured:
+        return configured
+
+    discovered = shutil.which("openssl")
+    if discovered:
+        return discovered
+
+    if os.path.exists(DEFAULT_OPENSSL_PATH):
+        return DEFAULT_OPENSSL_PATH
+
+    raise FileNotFoundError(
+        "OpenSSL executable not found. Set CYPHERQUBE_OPENSSL or install openssl."
+    )
+
+
+def _run_openssl_command(args, timeout=15, input_text="Q\n"):
+    return subprocess.run(
+        [_resolve_openssl_bin(), *args],
+        input=input_text,
+        capture_output=True,
+        text=True,
+        timeout=timeout,
+        check=False,
+    )
 
 
 def run_openssl(target, port):
     try:
         cmd = [
-            r"D:\OpenSSL\OpenSSL-Win64\bin\openssl.exe",
             "s_client",
             "-connect", f"{target}:{port}",
             "-servername", target,
             "-showcerts"
         ]
-        result = subprocess.run(
-            cmd,
-            input="Q\n",
-            capture_output=True,
-            text=True,
-            timeout=15
-        )
+        result = _run_openssl_command(cmd)
         return result.stdout + result.stderr
 
     except subprocess.TimeoutExpired:
@@ -56,20 +82,13 @@ def extract_hash(output):
 def get_certificate(target, port):
     try:
         cmd = [
-            r"D:\OpenSSL\OpenSSL-Win64\bin\openssl.exe",
             "s_client",
             "-connect", f"{target}:{port}",
             "-servername", target,
             "-showcerts"
         ]
 
-        result = subprocess.run(
-            cmd,
-            input="Q\n",
-            capture_output=True,
-            text=True,
-            timeout=15
-        )
+        result = _run_openssl_command(cmd)
 
         return result.stdout if result.stdout else None
 
@@ -92,12 +111,10 @@ def parse_certificate(cert_output):
     if not cert_output:
         return None
     try:
-        proc = subprocess.run(
-            [r"D:\OpenSSL\OpenSSL-Win64\bin\openssl.exe", "x509", "-text", "-noout"],
-            input=cert_output,
-            text=True,
-            capture_output=True,
-            timeout=10
+        proc = _run_openssl_command(
+            ["x509", "-text", "-noout"],
+            timeout=10,
+            input_text=cert_output,
         )
         return proc.stdout if proc.stdout else None
 

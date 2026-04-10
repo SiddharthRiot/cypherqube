@@ -10,8 +10,6 @@ Badge Types:
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Optional
-from core.badge import determine_badge
 
 BADGE_FULLY_QUANTUM_SAFE = "FULLY_QUANTUM_SAFE"
 BADGE_PQC_READY          = "PQC_READY"
