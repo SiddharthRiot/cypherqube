@@ -1,3 +1,6 @@
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent))
 """
 tests/test_risk_engine.py — Unit tests for Risk Engine
 """

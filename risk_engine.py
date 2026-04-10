@@ -272,28 +272,30 @@ def print_risk_report(findings, score):
     print(f"\n{'─' * 60}\n")
 
 def calculate_risk_score(
-    tls_version=None,
-    cipher_suite=None,
-    key_exchange=None,
-    public_key_algorithm=None,
-    public_key_size=None
+    tls_version=None, cipher_suite=None, key_exchange=None,
+    public_key_algorithm=None, public_key_size=None,
 ) -> int:
     """
-    Wrapper for test compatibility.
-    Converts flat params → inventory → calls analyze_quantum_risk()
-    Returns only risk score.
+    Wrapper for test compatibility. Flat scoring — no double-counting.
+    None/missing components are treated as unknown (conservatively risky).
     """
+    score = 0
+    ke = key_exchange or ""
+    if any(p.lower() in ke.lower() for p in PQC_KEM):    pass
+    elif any(v.lower() in ke.lower() for v in QUANTUM_VULNERABLE): score += 3
+    else: score += 3  # unknown key exchange — assume worst
 
-    inventory = {
-        "tls_version": tls_version or "Unknown",
-        "cipher_suite": cipher_suite or "Unknown",
-        "key_exchange": key_exchange or "Unknown",
-        "hash_function": tls_version or "Unknown",  # default assumption
-        "tls_signature": public_key_algorithm or "Unknown",
-        "certificate": {
-            "public_key_algorithm": public_key_algorithm or "Unknown"
-        }
-    }
+    pk = public_key_algorithm or ""
+    if any(p.lower() in pk.lower() for p in PQC_SIG):    pass
+    elif any(v.lower() in pk.lower() for v in QUANTUM_VULNERABLE): score += 2
+    else: score += 2  # unknown public key — assume worst
 
-    _, score = analyze_quantum_risk(inventory)
-    return score    
+    cs = cipher_suite or ""
+    if any(c.lower() in cs.lower() for c in CIPHER_WEAK): score += 1
+
+    tv = tls_version or ""
+    if any(old in tv for old in ("TLS 1.0","TLS 1.1","TLSv1.0","TLSv1.1")): score += 1
+    if tv and tv not in ("Unknown","—",""):
+        if not any(h.lower() in tv.lower() for h in HASH_SAFE + PARTIAL_RISK):
+            score += 1  # unrecognised TLS string used as hash proxy
+    return min(score, 10)

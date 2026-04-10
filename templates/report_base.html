@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<!-- Variables: target, scan_time, tls_version, cipher_suite, key_exchange,
+     hash_function, risk_score, risk_label, risk_class, findings (list),
+     cert.{public_key_algorithm,key_size,signature_algorithm,issuer,expiry} -->
+<html lang="en"><head><meta charset="UTF-8">
+<title>CypherQube — {{ target }}</title>
+<style>
+body{font-family:Arial,sans-serif;background:#f5f6f8;color:#1a2332;margin:0;padding:2rem}
+h1{color:#0a2352}.risk-critical{color:#c81e1e}.risk-medium{color:#b45309}.risk-safe{color:#166634}
+table{border-collapse:collapse;width:100%;margin-bottom:1rem}
+th,td{padding:8px 12px;border:1px solid #dde2ea;text-align:left}
+th{background:#f8fafc;font-size:.75rem;text-transform:uppercase}
+.sev-CRITICAL{color:#7f1d1d;background:#fef2f2}.sev-HIGH{color:#78350f;background:#fffbeb}
+.sev-MEDIUM{color:#713f12;background:#fefce8}.sev-INFO{color:#1e40af;background:#eff6ff}
+.sev-PASS{color:#14532d;background:#f0fdf4}
+</style></head><body>
+<h1>CypherQube Quantum Risk Report</h1>
+<p><strong>Target:</strong> {{ target }} &nbsp;|&nbsp; <strong>Scanned:</strong> {{ scan_time }}</p>
+<h2>Risk Score: <span class="{{ risk_class }}">{{ risk_score }}/10 — {{ risk_label }}</span></h2>
+<h3>TLS Configuration</h3>
+<table><tr><th>Field</th><th>Value</th></tr>
+<tr><td>TLS Version</td><td>{{ tls_version }}</td></tr>
+<tr><td>Cipher Suite</td><td>{{ cipher_suite }}</td></tr>
+<tr><td>Key Exchange</td><td>{{ key_exchange }}</td></tr>
+<tr><td>Hash Function</td><td>{{ hash_function }}</td></tr></table>
+<h3>Certificate</h3>
+<table><tr><th>Field</th><th>Value</th></tr>
+<tr><td>Public Key Algorithm</td><td>{{ cert.public_key_algorithm }}</td></tr>
+<tr><td>Key Size</td><td>{{ cert.key_size }} bits</td></tr>
+<tr><td>Signature Algorithm</td><td>{{ cert.signature_algorithm }}</td></tr>
+<tr><td>Issuer</td><td>{{ cert.issuer }}</td></tr>
+<tr><td>Expiry</td><td>{{ cert.expiry }}</td></tr></table>
+<h3>Findings ({{ findings | length }})</h3>
+{% if not findings %}<p style="color:#166634">✓ No quantum vulnerabilities detected.</p>
+{% else %}<table><tr><th>Severity</th><th>Category</th><th>Finding</th><th>Remediation</th></tr>
+{% for f in findings %}<tr class="sev-{{ f.severity }}">
+<td>{{ f.severity }}</td><td>{{ f.category }}</td><td>{{ f.finding }}</td><td>{{ f.remediation }}</td>
+</tr>{% endfor %}</table>{% endif %}
+<hr><p style="font-size:.75rem;color:#9aa5b4">CypherQube v2.1.0 — not a substitute for a formal audit.</p>
+</body></html>
