@@ -20,6 +20,12 @@ class CBOMEntry:
     certificate_issuer: Optional[str]
     public_key_algorithm: Optional[str]
     public_key_size: Optional[int]
+    tls_signature: Optional[str]
+    certificate_signature_algorithm: Optional[str]
+    hash_function: Optional[str]
+    risk_score: Optional[int]
+    risk_label: Optional[str]
+    pqc_readiness: Optional[str]
     quantum_safe: bool
 
 
@@ -38,6 +44,12 @@ class CBOMGenerator:
         certificate_issuer: str = None,
         public_key_algorithm: str = None,
         public_key_size: int = None,
+        tls_signature: str = None,
+        certificate_signature_algorithm: str = None,
+        hash_function: str = None,
+        risk_score: int = None,
+        risk_label: str = None,
+        pqc_readiness: str = None,
     ):
         quantum_safe = self._is_quantum_safe(
             cipher_suite,
@@ -55,6 +67,12 @@ class CBOMGenerator:
             certificate_issuer=certificate_issuer,
             public_key_algorithm=public_key_algorithm,
             public_key_size=public_key_size,
+            tls_signature=tls_signature,
+            certificate_signature_algorithm=certificate_signature_algorithm,
+            hash_function=hash_function,
+            risk_score=risk_score,
+            risk_label=risk_label,
+            pqc_readiness=pqc_readiness,
             quantum_safe=quantum_safe,
         )
 

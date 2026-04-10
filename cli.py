@@ -1,8 +1,7 @@
 import argparse
 import json
-from core import badge
-from scanner import analyze_target
-from pdf_report import generate_pdf_report
+from modules.scanner import analyze_target
+from reports.pdf_report import generate_pdf_report
 from core.badge import determine_badge
 
 

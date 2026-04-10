@@ -2,7 +2,6 @@
 tests/test_cbom.py — Unit tests for CBOM Generator
 """
 
-import pytest
 from core.cbom import CBOMGenerator
 
 
