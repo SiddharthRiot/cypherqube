@@ -11,6 +11,7 @@ Badge Types:
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional
+from datetime import UTC, datetime
 
 BADGE_FULLY_QUANTUM_SAFE = "FULLY_QUANTUM_SAFE"
 BADGE_PQC_READY          = "PQC_READY"
@@ -150,7 +151,7 @@ def determine_badge(risk_score: int, target: str = "") -> Badge:
         score_range  = meta["score_range"],
         description  = meta["description"],
         target       = target,
-        issued_at    = datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC"),
+        issued_at    = datetime.now(UTC).strftime("%Y-%m-%d %H:%M UTC"),
         color_fill   = meta["color_fill"],
         color_stroke = meta["color_stroke"],
         color_text   = meta["color_text"],

@@ -23,7 +23,6 @@ build/
 *.json
 *.pdf
 *.csv
-reports/
 output/
 report.pdf
 

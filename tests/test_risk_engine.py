@@ -5,8 +5,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 tests/test_risk_engine.py — Unit tests for Risk Engine
 """
 
-import pytest
-from risk_engine import calculate_risk_score
+from modules.risk_engine import calculate_risk_score
 
 
 def test_high_risk_rsa():

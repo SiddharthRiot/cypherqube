@@ -129,10 +129,21 @@ def _risk_label(score):
     else:            return "LOW QUANTUM RISK",      C_GREEN
 
 
-def generate_pdf_report(inventory: dict, output_path: str = None) -> bytes:
+def _assessment_view(report: dict) -> tuple[dict, dict, list, list, list, dict]:
+    inventory = report.get("inventory", report)
+    risk = report.get("quantum_risk", inventory.get("quantum_risk", {}))
+    findings = report.get("findings", risk.get("findings", []))
+    remediation = report.get("remediation", [])
+    nist_references = report.get("nist_references", [])
+    cbom = report.get("cbom", {"entries": [], "summary": {}})
+    return inventory, risk, findings, remediation, nist_references, cbom
+
+
+def generate_pdf_report(report: dict, output_path: str = None) -> bytes:
     buf = BytesIO()
     scan_time    = datetime.now().strftime("%Y-%m-%d %H:%M:%S UTC")
-    target_label = str(inventory.get("target", "Unknown Target"))
+    inventory, risk, findings, remediation, nist_references, cbom = _assessment_view(report)
+    target_label = str(report.get("target", inventory.get("target", "Unknown Target")))
 
     def on_page(canvas, doc):
         _page_decorator(canvas, doc, target=target_label, scan_time=scan_time)
@@ -155,10 +166,9 @@ def generate_pdf_report(inventory: dict, output_path: str = None) -> bytes:
     story.append(Spacer(1, 5 * mm))
     _hr(story)
 
-    risk     = inventory.get("quantum_risk", {})
     score    = float(risk.get("risk_score") or 0)
-    findings = risk.get("findings", [])
-    badge = determine_badge(int(score), target_label)         
+    badge_data = report.get("badge")
+    badge = determine_badge(int(score), target_label) if not badge_data else determine_badge(int(badge_data.get("score", score)), target_label)
     rlabel, rcolor = _risk_label(score)
 
     n_crit = len([f for f in findings if f.get("severity") in ("CRITICAL","HIGH")])
@@ -300,6 +310,49 @@ def generate_pdf_report(inventory: dict, output_path: str = None) -> bytes:
             ]))
 
             story.append(KeepTogether([card, Spacer(1, 5)]))
+
+    if remediation:
+        _section_title(story, f"Actionable Remediation  ({len(remediation)})", S)
+        _hr(story)
+        for item in remediation:
+            refs = ", ".join(ref["id"] for ref in item.get("nist_references", [])) or "General guidance"
+            story.append(_kv_table([
+                ("Component", item.get("component", "Unknown")),
+                ("Priority", item.get("priority", "UNKNOWN")),
+                ("Action", item.get("recommended_action", "Manual review required")),
+                ("Implementation Hint", item.get("implementation_hint", "Review and migrate as needed")),
+                ("NIST Reference", refs),
+            ], S))
+            story.append(Spacer(1, 3 * mm))
+
+    if nist_references:
+        _section_title(story, "NIST PQC Standards", S)
+        _hr(story)
+        story.append(_kv_table([
+            (ref.get("id", ""), f"{ref.get('name', '')}  {ref.get('url', '')}")
+            for ref in nist_references
+        ], S))
+        story.append(Spacer(1, 5 * mm))
+
+    if cbom.get("entries"):
+        _section_title(story, "CBOM Summary", S)
+        _hr(story)
+        summary = cbom.get("summary", {})
+        story.append(_kv_table([
+            ("Total Assets", summary.get("total_assets", 0)),
+            ("Quantum Safe", summary.get("quantum_safe", 0)),
+            ("Not Quantum Safe", summary.get("not_quantum_safe", 0)),
+            ("Risk Ratio", summary.get("risk_ratio", "0/0")),
+        ], S))
+        story.append(Spacer(1, 3 * mm))
+        first_entry = cbom["entries"][0]
+        story.append(_kv_table([
+            ("Protocol", first_entry.get("protocol", "HTTPS")),
+            ("TLS Signature", first_entry.get("tls_signature", "—")),
+            ("Certificate Signature", first_entry.get("certificate_signature_algorithm", "—")),
+            ("Hash Function", first_entry.get("hash_function", "—")),
+            ("PQC Readiness", first_entry.get("pqc_readiness", "Unknown")),
+        ], S))
 
     story.append(Spacer(1, 5 * mm))
     _hr(story)

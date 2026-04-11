@@ -5,7 +5,6 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 tests/test_cbom.py — Unit tests for CBOM Generator
 """
 
-import pytest
 from core.cbom import CBOMGenerator
 
 

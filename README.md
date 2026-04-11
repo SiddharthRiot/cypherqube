@@ -208,7 +208,7 @@ openssl version
 
 ### 🌐 Web Dashboard
 ```bash
-streamlit run app.py
+python -m streamlit run app.py
 ```
 
 Open your browser and go to:

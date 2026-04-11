@@ -10,6 +10,43 @@ def _openssl_binary() -> str:
               "/usr/bin/openssl", "/usr/local/bin/openssl"]:
         if Path(c).exists(): return c
     raise RuntimeError("openssl not found. Install OpenSSL and add it to PATH.")
+import os
+import re
+import shutil
+import subprocess
+from risk_engine import analyze_quantum_risk, print_risk_report
+
+
+DEFAULT_OPENSSL_PATH = r"D:\OpenSSL\OpenSSL-Win64\bin\openssl.exe"
+
+
+def _resolve_openssl_bin():
+    configured = os.environ.get("CYPHERQUBE_OPENSSL")
+    if configured:
+        return configured
+
+    discovered = shutil.which("openssl")
+    if discovered:
+        return discovered
+
+    if os.path.exists(DEFAULT_OPENSSL_PATH):
+        return DEFAULT_OPENSSL_PATH
+
+    raise FileNotFoundError(
+        "OpenSSL executable not found. Set CYPHERQUBE_OPENSSL or install openssl."
+    )
+
+
+def _run_openssl_command(args, timeout=15, input_text="Q\n"):
+    return subprocess.run(
+        [_resolve_openssl_bin(), *args],
+        input=input_text,
+        capture_output=True,
+        text=True,
+        timeout=timeout,
+        check=False,
+    )
+
 
 def run_openssl(target, port):
     try:
@@ -17,12 +54,78 @@ def run_openssl(target, port):
                "-servername", target, "-showcerts"]
         r = subprocess.run(cmd, input="Q\n", capture_output=True, text=True, timeout=15)
         return r.stdout + r.stderr
+        cmd = [
+            "s_client",
+            "-connect", f"{target}:{port}",
+            "-servername", target,
+            "-brief",
+            "-showcerts"
+        ]
+        result = _run_openssl_command(cmd)
+        return result.stdout + result.stderr
+
     except subprocess.TimeoutExpired:
         print(f"[scanner] Timeout {target}:{port}"); return None
     except RuntimeError as e:
         print(f"[scanner] {e}"); return None
     except Exception as e:
         print(f"[scanner] OpenSSL error: {e}"); return None
+        print(f"[scanner] OpenSSL error: {e}")
+        return None
+
+def extract_tls_version(output):
+    patterns = [
+        r"Protocol\s*:\s*(TLSv[\d.]+)",
+        r"New,\s*(TLSv[\d.]+),",
+        r"CONNECTION ESTABLISHED\s*\nProtocol version:\s*(TLSv[\d.]+)",
+    ]
+    for pattern in patterns:
+        match = re.search(pattern, output, re.IGNORECASE)
+        if match:
+            return match.group(1)
+    return "Unknown"
+
+
+def extract_cipher(output):
+    patterns = [
+        r"Cipher\s*:\s*([A-Z0-9_\-]+)",
+        r"Cipher is\s*([A-Z0-9_\-]+)",
+        r"Ciphersuite:\s*([A-Z0-9_\-]+)",
+    ]
+    for pattern in patterns:
+        match = re.search(pattern, output, re.IGNORECASE)
+        if match:
+            return match.group(1)
+    return "Unknown"
+
+
+def extract_key_exchange(output):
+    match = re.search(r"Server Temp Key:\s*([A-Za-z0-9\-_]+)", output)
+    return match.group(1) if match else "Unknown"
+
+
+def extract_signature(output):
+    patterns = [
+        r"Peer signature type:\s*([A-Za-z0-9\-_]+)",
+        r"Signature type:\s*([A-Za-z0-9\-_]+)",
+    ]
+    for pattern in patterns:
+        match = re.search(pattern, output, re.IGNORECASE)
+        if match:
+            return match.group(1)
+    return "Unknown"
+
+
+def extract_hash(output):
+    patterns = [
+        r"Hash used:\s*([A-Za-z0-9\-_]+)",
+        r"Hash algorithm:\s*([A-Za-z0-9\-_]+)",
+    ]
+    for pattern in patterns:
+        match = re.search(pattern, output, re.IGNORECASE)
+        if match:
+            return match.group(1)
+    return "Unknown"
 
 def extract_tls_version(o): m=re.search(r"Protocol\s*:\s*(TLSv[\d.]+)",o); return m.group(1) if m else "Unknown"
 def extract_cipher(o):      m=re.search(r"Cipher\s*:\s*([A-Z0-9_\-]+)",o);  return m.group(1) if m else "Unknown"
@@ -36,12 +139,34 @@ def get_certificate(target, port):
                "-servername", target, "-showcerts"]
         r = subprocess.run(cmd, input="Q\n", capture_output=True, text=True, timeout=15)
         return r.stdout or None
+        cmd = [
+            "s_client",
+            "-connect", f"{target}:{port}",
+            "-servername", target,
+            "-showcerts"
+        ]
+
+        result = _run_openssl_command(cmd)
+
+        return result.stdout if result.stdout else None
+
     except Exception as e:
         print(f"[scanner] Certificate fetch error: {e}"); return None
 
 def extract_first_cert(s):
     m = re.search(r"-----BEGIN CERTIFICATE-----(.*?)-----END CERTIFICATE-----", s or "", re.DOTALL)
     return ("-----BEGIN CERTIFICATE-----" + m.group(1) + "-----END CERTIFICATE-----") if m else None
+def parse_certificate(cert_output):
+    """Parse raw PEM output through openssl x509 -text."""
+    if not cert_output:
+        return None
+    try:
+        proc = _run_openssl_command(
+            ["x509", "-text", "-noout"],
+            timeout=10,
+            input_text=cert_output,
+        )
+        return proc.stdout if proc.stdout else None
 
 def parse_certificate(pem):
     if not pem: return None
@@ -117,4 +242,5 @@ def scan_target(target: str, port: int = 443) -> dict:
         "key_exchange": result.get("key_exchange") or "Unknown",
         "public_key_algorithm": cert.get("public_key_algorithm") or "Unknown",
         "public_key_size": int(ks) if str(ks).isdigit() else None,
+        "public_key_size": int(cert.get("key_size")) if str(cert.get("key_size")).isdigit() else None,
     }

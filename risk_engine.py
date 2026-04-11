@@ -244,13 +244,25 @@ def analyze_quantum_risk(inventory):
 SEV_ORDER = {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "UNKNOWN": 3, "INFO": 4, "PASS": 5}
 
 
-def print_risk_report(findings, score):
-    """CLI helper — prints findings and risk score to terminal."""
-    label = "CRITICAL" if score >= 7 else "MODERATE" if score >= 4 else "LOW"
+def _ascii_cli(text: str) -> str:
+    return (
+        str(text)
+        .replace("—", "-")
+        .replace("–", "-")
+        .replace("→", "->")
+        .replace("â†’", "->")
+        .replace("…", "...")
+    )
 
-    print(f"\n{'─' * 60}")
-    print(f"  QUANTUM RISK SCORE : {score}/10  [{label}]")
-    print(f"{'─' * 60}")
+
+def print_risk_report(findings, score):
+    """CLI helper that prints findings using ASCII-safe separators."""
+    label = "CRITICAL" if score >= 7 else "MODERATE" if score >= 4 else "LOW"
+    divider = "-" * 60
+
+    print(f"\n{divider}")
+    print(_ascii_cli(f"  QUANTUM RISK SCORE : {score}/10  [{label}]"))
+    print(divider)
 
     if not findings:
         print("  No quantum vulnerabilities detected.")
@@ -264,13 +276,12 @@ def print_risk_report(findings, score):
             category = f.get("category", "")
             finding  = f.get("finding", "")
             rem      = f.get("remediation", "")
-            print(f"\n  [{sev}] {category}")
-            print(f"  {finding}")
+            print(_ascii_cli(f"\n  [{sev}] {category}"))
+            print(_ascii_cli(f"  {finding}"))
             if rem:
-                print(f"  → {rem}")
+                print(_ascii_cli(f"  -> {rem}"))
 
-    print(f"\n{'─' * 60}\n")
-
+    print(f"\n{divider}\n")
 def calculate_risk_score(
     tls_version=None, cipher_suite=None, key_exchange=None,
     public_key_algorithm=None, public_key_size=None,
@@ -299,3 +310,51 @@ def calculate_risk_score(
         if not any(h.lower() in tv.lower() for h in HASH_SAFE + PARTIAL_RISK):
             score += 1  # unrecognised TLS string used as hash proxy
     return min(score, 10)
+
+    cipher_value = str(cipher_suite or "Unknown").upper()
+    key_exchange_value = str(key_exchange or "Unknown").upper()
+    public_key_value = str(public_key_algorithm or "Unknown").upper()
+    tls_value = str(tls_version or "Unknown").upper()
+
+    score = 0
+
+    if any(token in key_exchange_value for token in ("KYBER", "ML-KEM", "MLKEM")):
+        score += 0
+    elif any(token in key_exchange_value for token in ("RSA", "ECDHE", "ECDSA", "ECDH", "X25519", "DH")):
+        score += 2
+    else:
+        score += 1
+
+    if any(token in public_key_value for token in ("DILITHIUM", "ML-DSA", "MLDSA", "FALCON", "SLH-DSA", "SPHINCS")):
+        score += 0
+    elif any(token in public_key_value for token in ("RSA", "ECDSA", "EC")):
+        score += 2
+    else:
+        score += 1
+
+    if any(token in cipher_value for token in ("AES_256", "AES256", "TLS_AES_256", "CHACHA20")):
+        score += 0
+    elif any(token in cipher_value for token in ("AES_128", "AES128", "3DES", "DES", "RC4", "CBC")):
+        score += 2
+    else:
+        score += 1
+
+    if "TLS 1.3" in tls_value:
+        score += 0
+    elif "TLS 1.2" in tls_value:
+        score += 1
+    else:
+        score += 2
+
+    if public_key_size is None:
+        score += 1
+    elif public_key_size < 2048:
+        score += 2
+    elif public_key_size < 3072:
+        score += 1
+
+    if not any([cipher_suite, key_exchange, public_key_algorithm, tls_version]):
+        score += 1
+
+    return min(score, 10)
+

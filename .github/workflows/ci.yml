@@ -1,0 +1,112 @@
+name: CypherQube CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  build:
+    name: build (${{ matrix.os }}, ${{ matrix.python-version }})
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ["3.12", "3.13"]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install OpenSSL (Ubuntu)
+        if: runner.os == 'Linux'
+        run: sudo apt-get install -y openssl
+
+      - name: Install OpenSSL (macOS)
+        if: runner.os == 'macOS'
+        run: brew install openssl@3
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Create conftest.py
+        shell: python
+        run: |
+          import os
+          with open("conftest.py", "w") as f:
+              f.write("import sys, os\n")
+              f.write("sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))\n")
+
+      - name: Run tests
+        run: python -m pytest tests/ -v --tb=short
+
+  coverage:
+    name: build / coverage
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Create conftest.py
+        shell: python
+        run: |
+          import os
+          with open("conftest.py", "w") as f:
+              f.write("import sys, os\n")
+              f.write("sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))\n")
+
+      - name: Run tests with coverage
+        run: |
+          python -m pytest tests/ -v \
+            --cov=. \
+            --cov-report=term-missing \
+            --cov-report=xml \
+            --tb=short
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage.xml
+
+  examples:
+    name: build / examples
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Verify core imports work
+        run: |
+          python -c "from risk_engine import analyze_quantum_risk; print('risk_engine OK')"
+          python -c "from pdf_report import generate_pdf_report; print('pdf_report OK')"
