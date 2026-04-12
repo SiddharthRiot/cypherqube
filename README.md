@@ -202,6 +202,70 @@ openssl version
 
 ---
 
+## 🐳 Docker Setup
+
+Running CypherQube inside Docker ensures a consistent environment with
+Python 3.13 and OpenSSL 3.x regardless of your host operating system.
+
+<br/>
+
+### Prerequisites
+
+- [Docker](https://docs.docker.com/get-docker/) 24+
+- [Docker Compose](https://docs.docker.com/compose/install/) v2+
+
+<br/>
+
+### Build & Run with Docker Compose
+
+```bash
+# Clone the repository
+git clone https://github.com/SiddharthRiot/cypherqube.git
+cd cypherqube
+
+# Build the image and start the dashboard
+docker compose up --build
+```
+
+Open your browser and go to `http://localhost:8501`
+
+<br/>
+
+### Build & Run with plain Docker
+
+```bash
+# Build the image
+docker build -t cypherqube .
+
+# Run the dashboard
+docker run -p 8501:8501 cypherqube
+```
+
+<br/>
+
+### Run the Test Suite inside Docker
+
+```bash
+# Using Docker Compose (test profile)
+docker compose run --rm test
+
+# Or directly with Docker
+docker run --rm cypherqube python -m pytest tests/ -v --tb=short
+```
+
+<br/>
+
+### Verify OpenSSL version inside the container
+
+```bash
+docker run --rm cypherqube openssl version
+# OpenSSL 3.x.x ...
+```
+
+<br/>
+
+---
+
 ## 🚀 Usage
 
 <br/>
