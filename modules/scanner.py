@@ -14,7 +14,9 @@ from scanner import (
     get_certificate,
     parse_certificate,
     print_crypto_inventory,
+    print_risk_report,
     run_openssl,
+    SEV_ORDER,
 )
 from scanner import analyze_target as _analyze_target
 
@@ -59,6 +61,8 @@ __all__ = [
     "get_certificate",
     "parse_certificate",
     "print_crypto_inventory",
+    "print_risk_report",
     "run_openssl",
     "scan_target",
+    "SEV_ORDER",
 ]
