@@ -1,8 +1,8 @@
 """Runtime scanner and risk modules."""
 
 from .assessment import assess_target, batch_assess_targets, build_assessment, normalize_target, risk_meta
-from .risk_engine import analyze_quantum_risk, calculate_risk_score, print_risk_report
-from .scanner import analyze_target, scan_target
+from .risk_engine import analyze_quantum_risk, calculate_risk_score
+from .scanner import analyze_target, print_risk_report, scan_target
 
 __all__ = [
     "analyze_quantum_risk",

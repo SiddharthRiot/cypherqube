@@ -5,6 +5,74 @@ import time
 import pytest
 
 from modules import scanner as scanner_module
+# _validate_target_port is a private helper in the top-level scanner module;
+# import it directly so we can unit-test the guard in isolation.
+import scanner as _scanner_core
+_validate_target_port = _scanner_core._validate_target_port
+
+
+# ---------------------------------------------------------------------------
+# Input validation tests
+# ---------------------------------------------------------------------------
+
+class TestValidateTargetPort:
+    """_validate_target_port must reject bad inputs before any subprocess call."""
+
+    def test_valid_domain_and_port(self):
+        # Should not raise
+        _validate_target_port("example.com", 443)
+        _validate_target_port("sub.example.co.uk", 8443)
+        _validate_target_port("a", 1)
+        _validate_target_port("192.168.1.1", 65535)
+
+    def test_empty_target_raises(self):
+        with pytest.raises(ValueError, match="non-empty"):
+            _validate_target_port("", 443)
+
+    def test_none_target_raises(self):
+        with pytest.raises(ValueError):
+            _validate_target_port(None, 443)
+
+    def test_target_with_shell_metacharacters_raises(self):
+        for bad in ("evil.com; ls", "evil.com && id", "evil.com|cat", "evil.com`id`"):
+            with pytest.raises(ValueError, match="Invalid target"):
+                _validate_target_port(bad, 443)
+
+    def test_target_with_path_component_raises(self):
+        with pytest.raises(ValueError, match="Invalid target"):
+            _validate_target_port("example.com/path", 443)
+
+    def test_target_with_port_embedded_raises(self):
+        with pytest.raises(ValueError, match="Invalid target"):
+            _validate_target_port("example.com:443", 443)
+
+    def test_port_zero_raises(self):
+        with pytest.raises(ValueError, match="1.65535"):
+            _validate_target_port("example.com", 0)
+
+    def test_port_too_high_raises(self):
+        with pytest.raises(ValueError, match="1.65535"):
+            _validate_target_port("example.com", 65536)
+
+    def test_port_negative_raises(self):
+        with pytest.raises(ValueError, match="1.65535"):
+            _validate_target_port("example.com", -1)
+
+    def test_port_string_raises(self):
+        with pytest.raises(ValueError):
+            _validate_target_port("example.com", "443")
+
+    def test_port_float_raises(self):
+        with pytest.raises(ValueError):
+            _validate_target_port("example.com", 443.0)
+
+    def test_port_bool_raises(self):
+        # bool is a subclass of int in Python; True == 1 would silently pass
+        # the range check without an explicit isinstance(port, bool) guard.
+        with pytest.raises(ValueError):
+            _validate_target_port("example.com", True)
+        with pytest.raises(ValueError):
+            _validate_target_port("example.com", False)
 
 
 @pytest.fixture

@@ -2,10 +2,35 @@ import os
 import re
 import shutil
 import subprocess
-from risk_engine import analyze_quantum_risk, print_risk_report
+from risk_engine import analyze_quantum_risk
+
+# Basic regex for valid hostnames / IP addresses passed to OpenSSL.
+# Allows labels of alphanumerics and hyphens separated by dots (RFC 1123),
+# plus bare IPv4 addresses.  Intentionally conservative — reject anything
+# that looks like a shell-injection attempt.
+_DOMAIN_RE = re.compile(
+    r"^(?:[A-Za-z0-9](?:[A-Za-z0-9\-]{0,61}[A-Za-z0-9])?)"
+    r"(?:\.(?:[A-Za-z0-9](?:[A-Za-z0-9\-]{0,61}[A-Za-z0-9])?))*$"
+)
 
 
-DEFAULT_OPENSSL_PATH = r"D:\OpenSSL\OpenSSL-Win64\bin\openssl.exe"
+def _validate_target_port(target: str, port: int) -> None:
+    """Validate target domain/IP and port before passing to OpenSSL.
+
+    Uses a conservative RFC-1123 hostname regex to reject shell
+    metacharacters and other unexpected input (CWE-78 — OS Command Injection
+    prevention).  Port is checked to be an integer in the valid TCP range
+    1–65535.
+
+    Raises ValueError for invalid inputs so callers can surface the error
+    before any subprocess is invoked.
+    """
+    if not target or not isinstance(target, str):
+        raise ValueError("Target must be a non-empty string.")
+    if not _DOMAIN_RE.match(target):
+        raise ValueError(f"Invalid target domain: {target!r}")
+    if isinstance(port, bool) or not isinstance(port, int) or not (1 <= port <= 65535):
+        raise ValueError(f"Port must be an integer in range 1–65535, got: {port!r}")
 
 
 def _resolve_openssl_bin():
@@ -17,11 +42,10 @@ def _resolve_openssl_bin():
     if discovered:
         return discovered
 
-    if os.path.exists(DEFAULT_OPENSSL_PATH):
-        return DEFAULT_OPENSSL_PATH
-
     raise FileNotFoundError(
-        "OpenSSL executable not found. Set CYPHERQUBE_OPENSSL or install openssl."
+        "OpenSSL executable not found. "
+        "Install openssl and ensure it is on PATH, or set the "
+        "CYPHERQUBE_OPENSSL environment variable to the full binary path."
     )
 
 
@@ -37,6 +61,7 @@ def _run_openssl_command(args, timeout=15, input_text="Q\n"):
 
 
 def run_openssl(target, port):
+    _validate_target_port(target, port)
     try:
         cmd = [
             "s_client",
@@ -121,6 +146,7 @@ def extract_hash(output):
 
 
 def get_certificate(target, port):
+    _validate_target_port(target, port)
     try:
         cmd = [
             "s_client",
@@ -218,6 +244,51 @@ def print_crypto_inventory(inventory):
     print(f"Cert Signature      : {cert['signature_algorithm']}")
     print(f"Issuer              : {cert['issuer']}")
     print(f"Expiry              : {cert['expiry']}")
+
+
+# Display ordering used by print_risk_report() — lower number = shown first.
+# NOTE: this is for CLI output ordering only, not for risk scoring.
+SEV_ORDER = {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "UNKNOWN": 3, "INFO": 4, "PASS": 5}
+
+
+def _ascii_cli(text: str) -> str:
+    return (
+        str(text)
+        .replace("—", "-")
+        .replace("–", "-")
+        .replace("→", "->")
+        .replace("â†'", "->")
+        .replace("…", "...")
+    )
+
+
+def print_risk_report(findings, score):
+    """CLI helper that prints findings using ASCII-safe separators."""
+    label = "CRITICAL" if score >= 7 else "MODERATE" if score >= 4 else "LOW"
+    divider = "-" * 60
+
+    print(f"\n{divider}")
+    print(_ascii_cli(f"  QUANTUM RISK SCORE : {score}/10  [{label}]"))
+    print(divider)
+
+    if not findings:
+        print("  No quantum vulnerabilities detected.")
+    else:
+        sorted_findings = sorted(
+            findings,
+            key=lambda f: SEV_ORDER.get(f.get("severity", "UNKNOWN"), 99)
+        )
+        for f in sorted_findings:
+            sev      = f.get("severity", "?")
+            category = f.get("category", "")
+            finding  = f.get("finding", "")
+            rem      = f.get("remediation", "")
+            print(_ascii_cli(f"\n  [{sev}] {category}"))
+            print(_ascii_cli(f"  {finding}"))
+            if rem:
+                print(_ascii_cli(f"  -> {rem}"))
+
+    print(f"\n{divider}\n")
 
 
 def analyze_target(target, port):
