@@ -66,6 +66,14 @@ class TestValidateTargetPort:
         with pytest.raises(ValueError):
             _validate_target_port("example.com", 443.0)
 
+    def test_port_bool_raises(self):
+        # bool is a subclass of int in Python; True == 1 would silently pass
+        # the range check without an explicit isinstance(port, bool) guard.
+        with pytest.raises(ValueError):
+            _validate_target_port("example.com", True)
+        with pytest.raises(ValueError):
+            _validate_target_port("example.com", False)
+
 
 @pytest.fixture
 def mock_scan(monkeypatch, sample_scan_report):

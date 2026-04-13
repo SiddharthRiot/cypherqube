@@ -29,7 +29,7 @@ def _validate_target_port(target: str, port: int) -> None:
         raise ValueError("Target must be a non-empty string.")
     if not _DOMAIN_RE.match(target):
         raise ValueError(f"Invalid target domain: {target!r}")
-    if not isinstance(port, int) or not (1 <= port <= 65535):
+    if isinstance(port, bool) or not isinstance(port, int) or not (1 <= port <= 65535):
         raise ValueError(f"Port must be an integer in range 1–65535, got: {port!r}")
 
 
