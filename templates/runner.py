@@ -8,7 +8,6 @@ from templates import render_app
 
 def main() -> int:
     """Run the Streamlit dashboard through the shared template renderer."""
-    # If invoked as a plain python script (not via streamlit), tell the user.
     if "streamlit" not in sys.argv[0] and not any("streamlit" in a for a in sys.argv):
         print("Run this app with:  streamlit run app.py")
         return 1

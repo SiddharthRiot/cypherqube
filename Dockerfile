@@ -1,4 +1,4 @@
-# ── CypherQube — Python 3.13 + OpenSSL 3.x ───────────────────────────────────
+# CypherQube — Python 3.13 + OpenSSL 3.x
 FROM python:3.13-slim-bookworm
 
 # Bookworm ships OpenSSL 3.x by default — verify at build time

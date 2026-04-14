@@ -17,7 +17,7 @@ from reportlab.lib.colors import HexColor
 from core.badge import determine_badge
 
 
-# ── Formal white palette ──────────────────────────────────────────────────────
+# Formal white palette
 C_BG        = HexColor("#ffffff")   # page background
 C_HEADER_BG = HexColor("#1a3a5c")   # deep navy header bar
 C_CARD      = HexColor("#f7f9fc")   # card / row background
@@ -55,7 +55,7 @@ MARGIN    = 20 * mm
 CONTENT_W = PAGE_W - 2 * MARGIN
 
 
-# ── Page decorator ────────────────────────────────────────────────────────────
+# Page decorator
 def _page_decorator(canvas, doc, target="", scan_time=""):
     canvas.saveState()
 
@@ -94,7 +94,7 @@ def _page_decorator(canvas, doc, target="", scan_time=""):
     canvas.restoreState()
 
 
-# ── Styles ────────────────────────────────────────────────────────────────────
+# Styles
 def _styles():
     return {
         "h1": ParagraphStyle("h1", fontName="Helvetica-Bold", fontSize=20,
@@ -120,7 +120,7 @@ def _styles():
     }
 
 
-# ── Helpers ───────────────────────────────────────────────────────────────────
+# Helpers
 def _hr(story):
     story.append(HRFlowable(
         width="100%", thickness=0.75, color=C_BORDER,
@@ -167,7 +167,7 @@ def _assessment_view(report: dict) -> tuple[dict, dict, list, list, list, dict]:
     return inventory, risk, findings, remediation, nist_references, cbom
 
 
-# ── Main generator ────────────────────────────────────────────────────────────
+# Main generator
 def generate_pdf_report(report: dict, output_path: str = None) -> bytes:
     buf       = BytesIO()
     scan_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S UTC")
@@ -188,7 +188,7 @@ def generate_pdf_report(report: dict, output_path: str = None) -> bytes:
     S     = _styles()
     story = []
 
-    # ── Cover block ───────────────────────────────────────────────────────────
+    #Cover block
     story.append(Spacer(1, 6 * mm))
     story.append(Paragraph("Quantum Risk Assessment Report", S["h1"]))
     story.append(Spacer(1, 2 * mm))
@@ -198,7 +198,7 @@ def generate_pdf_report(report: dict, output_path: str = None) -> bytes:
     story.append(Spacer(1, 5 * mm))
     _hr(story)
 
-    # ── Risk score summary ────────────────────────────────────────────────────
+    # Risk score summary
     score    = float(risk.get("risk_score") or 0)
     badge_data = report.get("badge")
     badge = (
@@ -244,13 +244,13 @@ def generate_pdf_report(report: dict, output_path: str = None) -> bytes:
     story.append(summary)
     story.append(Spacer(1, 6 * mm))
 
-    # ── Badge ─────────────────────────────────────────────────────────────────
+    # Badge
     _section_title(story, "Quantum Certification", S)
     _hr(story)
     story.append(Paragraph(f"<b>{badge.label}</b> — {badge.sublabel}", S["value"]))
     story.append(Spacer(1, 5 * mm))
 
-    # ── TLS Configuration ─────────────────────────────────────────────────────
+    # TLS Configuration
     _section_title(story, "TLS Configuration", S)
     _hr(story)
     story.append(_kv_table([
@@ -262,7 +262,7 @@ def generate_pdf_report(report: dict, output_path: str = None) -> bytes:
     ], S))
     story.append(Spacer(1, 5 * mm))
 
-    # ── Certificate Details ───────────────────────────────────────────────────
+    # Certificate Details
     _section_title(story, "Certificate Details", S)
     _hr(story)
     cert = inventory.get("certificate", {})
@@ -275,7 +275,7 @@ def generate_pdf_report(report: dict, output_path: str = None) -> bytes:
     ], S))
     story.append(Spacer(1, 5 * mm))
 
-    # ── Findings ──────────────────────────────────────────────────────────────
+    # Findings
     _section_title(story, f"Quantum Risk Findings  ({len(findings)})", S)
     _hr(story)
 
@@ -359,7 +359,7 @@ def generate_pdf_report(report: dict, output_path: str = None) -> bytes:
 
             story.append(KeepTogether([card, Spacer(1, 6)]))
 
-    # ── Actionable Remediation ────────────────────────────────────────────────
+    #  Actionable Remediation
     if remediation:
         _section_title(story, f"Actionable Remediation  ({len(remediation)})", S)
         _hr(story)
@@ -374,7 +374,7 @@ def generate_pdf_report(report: dict, output_path: str = None) -> bytes:
             ], S))
             story.append(Spacer(1, 3 * mm))
 
-    # ── NIST PQC References ───────────────────────────────────────────────────
+    # NIST PQC References
     if nist_references:
         _section_title(story, "NIST PQC Standards", S)
         _hr(story)
@@ -384,7 +384,7 @@ def generate_pdf_report(report: dict, output_path: str = None) -> bytes:
         ], S))
         story.append(Spacer(1, 5 * mm))
 
-    # ── CBOM ──────────────────────────────────────────────────────────────────
+    # CBOM
     if cbom.get("entries"):
         _section_title(story, "CBOM Summary", S)
         _hr(story)
@@ -405,7 +405,7 @@ def generate_pdf_report(report: dict, output_path: str = None) -> bytes:
             ("PQC Readiness",          first_entry.get("pqc_readiness", "Unknown")),
         ], S))
 
-    # ── Disclaimer ────────────────────────────────────────────────────────────
+    #Disclaimer
     story.append(Spacer(1, 6 * mm))
     _hr(story)
     story.append(Paragraph(

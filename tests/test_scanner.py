@@ -11,9 +11,7 @@ import scanner as _scanner_core
 _validate_target_port = _scanner_core._validate_target_port
 
 
-# ---------------------------------------------------------------------------
 # Input validation tests
-# ---------------------------------------------------------------------------
 
 class TestValidateTargetPort:
     """_validate_target_port must reject bad inputs before any subprocess call."""

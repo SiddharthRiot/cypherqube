@@ -33,7 +33,6 @@ NIST_PQC_STANDARDS = {
 
 
 def standards_for_text(value: str) -> list[dict]:
-    """Return matching NIST standards for an algorithm label."""
     if not value:
         return []
 
