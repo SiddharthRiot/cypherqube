@@ -1,14 +1,25 @@
-"""Launch helpers for running the Streamlit app from python app.py."""
+"""Application entry point for CypherQube."""
 
-import os
-import subprocess
 import sys
+from modules import assess_target, batch_assess_targets
+from reports import generate_pdf_report
+from templates import render_app
 
 
-BOOTSTRAP_ENV = "CYPHERQUBE_STREAMLIT_BOOTSTRAPPED"
+def main() -> int:
+    """Run the Streamlit dashboard through the shared template renderer."""
+    # If invoked as a plain python script (not via streamlit), tell the user.
+    if "streamlit" not in sys.argv[0] and not any("streamlit" in a for a in sys.argv):
+        print("Run this app with:  streamlit run app.py")
+        return 1
+
+    render_app(
+        assess_target=assess_target,
+        batch_assess_targets=batch_assess_targets,
+        generate_pdf_report=generate_pdf_report,
+    )
+    return 0
 
 
-def relaunch_with_streamlit(script_path: str) -> int:
-    env = os.environ.copy()
-    env[BOOTSTRAP_ENV] = "1"
-    return subprocess.call([sys.executable, "-m", "streamlit", "run", script_path], env=env)
+if __name__ == "__main__":
+    raise SystemExit(main())

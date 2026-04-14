@@ -164,6 +164,10 @@ def get_certificate(target, port):
         return None
     
 def extract_first_cert(cert_output):
+    # ── Guard: return None if there's nothing to parse ───────────────────────
+    if not cert_output:
+        return None
+
     match = re.search(
         r"-----BEGIN CERTIFICATE-----(.*?)-----END CERTIFICATE-----",
         cert_output,
@@ -314,8 +318,8 @@ def analyze_target(target, port):
     key_exchange   = extract_key_exchange(raw_output)
 
     cert_raw  = get_certificate(target, port)
-    cert_pem  = extract_first_cert(cert_raw)
-    cert_text = parse_certificate(cert_pem)
+    cert_pem  = extract_first_cert(cert_raw)   # safe: guards None internally
+    cert_text = parse_certificate(cert_pem)    # safe: guards None internally
 
     pub_algo, key_size = extract_cert_public_key(cert_text)
     cert_signature     = extract_cert_signature(cert_text)

@@ -1,6 +1,7 @@
 """App bootstrap helpers."""
 
 from .dashboard import render_app
-from .runner import relaunch_with_streamlit
+from .runner import render_app
 
-__all__ = ["relaunch_with_streamlit", "render_app"]
+
+__all__ = ["render_app"]
