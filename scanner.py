@@ -164,7 +164,7 @@ def get_certificate(target, port):
         return None
     
 def extract_first_cert(cert_output):
-    # ── Guard: return None if there's nothing to parse ───────────────────────
+    # Guard: return None if there's nothing to parse
     if not cert_output:
         return None
 

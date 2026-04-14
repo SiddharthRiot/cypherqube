@@ -96,11 +96,9 @@ class Badge:
     color_icon:   str
 
     def is_safe(self) -> bool:
-        """True iff badge is FULLY_QUANTUM_SAFE ya PQC_READY."""
         return self.badge_type in (BADGE_FULLY_QUANTUM_SAFE, BADGE_PQC_READY)
 
     def is_critical(self) -> bool:
-        """True iff badge is VULNERABLE."""
         return self.badge_type == BADGE_VULNERABLE
 
     def to_dict(self) -> dict:
@@ -117,16 +115,7 @@ class Badge:
 
 
 def determine_badge(risk_score: int, target: str = "") -> Badge:
-    """
-    Risk score ke basis pe correct badge return karta hai.
 
-    Args:
-        risk_score : Integer 0–10 (risk_engine se aata hai)
-        target     : Target host string (e.g. "api.example.com:443")
-
-    Returns:
-        Badge dataclass instance
-    """
     score = max(0, min(10, int(risk_score)))
 
     if score == 0:
@@ -158,17 +147,7 @@ def determine_badge(risk_score: int, target: str = "") -> Badge:
 
 
 def generate_svg_badge(badge: Badge, width: int = 320) -> str:
-    """
-    Badge ke liye SVG string generate karta hai.
-    Streamlit mein st.markdown(..., unsafe_allow_html=True) se render hoga.
 
-    Args:
-        badge : Badge dataclass instance
-        width : SVG width in pixels (default 320)
-
-    Returns:
-        SVG string
-    """
     height   = 100
     icon_x   = 28
     icon_y   = 50
@@ -231,13 +210,7 @@ def generate_svg_badge(badge: Badge, width: int = 320) -> str:
 
 
 def generate_inline_badge_html(badge: Badge) -> str:
-    """
-    Ek chhoti si inline HTML badge generate karta hai.
-    Streamlit metric cards ya findings panel ke andar use hoga.
 
-    Returns:
-        HTML string (single div)
-    """
     return f"""
 <div style="
     display: inline-flex;
@@ -267,13 +240,7 @@ def generate_inline_badge_html(badge: Badge) -> str:
 
 
 def generate_certificate_html(badge: Badge) -> str:
-    """
-    Ek poora "PQC Certificate" card generate karta hai —
-    Hackathon mein yahi sabse zyada impress karega.
 
-    Returns:
-        HTML string
-    """
     is_safe    = badge.is_safe()
     is_vuln    = badge.is_critical()
 
@@ -373,13 +340,7 @@ def generate_certificate_html(badge: Badge) -> str:
 
 
 def get_pdf_badge_data(badge: Badge) -> dict:
-    """
-    pdf_report.py ke liye badge data dict return karta hai.
-    ReportLab Table mein directly use hoga.
 
-    Returns:
-        dict with label, sublabel, score, color strings (hex), description
-    """
     return {
         "label":       badge.label,
         "sublabel":    badge.sublabel,
@@ -395,23 +356,7 @@ def get_pdf_badge_data(badge: Badge) -> dict:
 
 
 def summarise_bulk_badges(badges: list[Badge]) -> dict:
-    """
-    Multiple badges ka summary dict return karta hai.
-    Bulk scan results table ke liye use hoga.
 
-    Args:
-        badges : List of Badge instances
-
-    Returns:
-        {
-          "total": int,
-          "fully_safe": int,
-          "pqc_ready": int,
-          "partial": int,
-          "vulnerable": int,
-          "overall_risk": str   # worst badge type across all
-        }
-    """
     counts = {
         BADGE_FULLY_QUANTUM_SAFE: 0,
         BADGE_PQC_READY:          0,
@@ -421,7 +366,7 @@ def summarise_bulk_badges(badges: list[Badge]) -> dict:
     for b in badges:
         counts[b.badge_type] += 1
 
-    # Worst badge = highest risk wala
+    # Worst badge = highest risk
     if counts[BADGE_VULNERABLE] > 0:
         overall = BADGE_VULNERABLE
     elif counts[BADGE_PARTIAL_RISK] > 0:
