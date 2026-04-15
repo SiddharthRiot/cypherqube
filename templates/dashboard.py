@@ -1341,26 +1341,48 @@ def render_app(*, assess_target, batch_assess_targets, generate_pdf_report):
                 """, unsafe_allow_html=True)
                 st.markdown(findings_html, unsafe_allow_html=True)
 
+                                # --- Section 1: Actionable Remediation ---
+                # Heading ko block ke upar laya gaya hai (Professional Dark Gray)
+                st.markdown("""
+                    <div style='margin-top: 20px; margin-bottom: 5px;'>
+                        <span style='color: #1e293b; font-size: 1.1rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;'>
+                             Actionable Remediation
+                        </span>
+                    </div>
+                """, unsafe_allow_html=True)
+                
                 st.markdown(f"""
-                <div class="cq-findings-panel">
-                    <div class="cq-findings-header">
-                        <span class="cq-findings-title">Actionable Remediation</span>
-                        <span class="cq-findings-badge">{len(remediation)} actions</span>
+                <div class="cq-findings-panel" style="border-top: 4px solid #10b981; border-radius: 4px 4px 0 0;">
+                    <div class="cq-findings-header" style="background-color: rgba(16, 185, 129, 0.05);">
+                        <span class="cq-findings-title">Recommended Fixes</span>
+                        <span class="cq-findings-badge" style="background-color: #10b981;">{len(remediation)} actions</span>
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
                 st.markdown(build_remediation_html(remediation), unsafe_allow_html=True)
 
+                st.write("") 
+
+                # --- Section 2: NIST PQC Mapping ---
+                # Heading ko block ke upar laya gaya hai (Professional Blue)
+                st.markdown("""
+                    <div style='margin-top: 25px; margin-bottom: 5px;'>
+                        <span style='color: #1e293b; font-size: 1.1rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;'>
+                             NIST PQC Mapping
+                        </span>
+                    </div>
+                """, unsafe_allow_html=True)
+
                 st.markdown(f"""
-                <div class="cq-findings-panel">
-                    <div class="cq-findings-header">
-                        <span class="cq-findings-title">NIST PQC Mapping</span>
-                        <span class="cq-findings-badge">{len(nist_refs)} standards</span>
+                <div class="cq-findings-panel" style="border-top: 4px solid #3b82f6; border-radius: 4px 4px 0 0;">
+                    <div class="cq-findings-header" style="background-color: rgba(59, 130, 246, 0.05);">
+                        <span class="cq-findings-title">Standards Alignment</span>
+                        <span class="cq-findings-badge" style="background-color: #3b82f6;">{len(nist_refs)} standards</span>
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
                 st.markdown(build_nist_html(nist_refs), unsafe_allow_html=True)
-
+                # Section 3: CBOM (Make sure this is also properly indented)
                 st.markdown(f"""
                 <div class="cq-cert-panel" style="margin-top:1rem;">
                     <div class="cq-cert-header">
@@ -1369,18 +1391,7 @@ def render_app(*, assess_target, batch_assess_targets, generate_pdf_report):
                     </div>
                     {build_cbom_html(cbom)}
                 </div>
-                """, unsafe_allow_html=True)
-                
-    
-                # Export section 
-                st.markdown("""
-                <div class="cq-section">
-                    <div class="cq-section-num">3</div>
-                    <div class="cq-section-label">Export Report</div>
-                    <div class="cq-section-line"></div>
-                </div>
-                """, unsafe_allow_html=True)
-    
+                """, unsafe_allow_html=True)             
                 col_json, col_pdf, _ = st.columns([1, 1, 5])
                 with col_json:
                     st.download_button(
